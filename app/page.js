@@ -31,102 +31,86 @@ Respond ONLY with valid JSON in this exact format, no markdown, no backticks:
 {"uncertainty_score": <number -10 to 10>, "possibility_score": <number -10 to 10>, "style": "<Focused|Incremental|Playful|Breakaway>", "uncertainty_reasoning": "<2-3 sentences explaining the uncertainty dimension score with specific textual evidence>", "possibility_reasoning": "<2-3 sentences explaining the possibility dimension score with specific textual evidence>", "key_indicators": ["<phrase or pattern 1>", "<phrase or pattern 2>", "<phrase or pattern 3>", "<phrase or pattern 4>", "<phrase or pattern 5>"], "summary": "<1-2 sentence overall interpretation of the thinking style revealed in this text>"}`;
 
 const SAMPLE_TEXTS = {
-  "Student reflection (Focused)": `As for my kinetic thinking style, the assessment indicates that I am a focused thinker and I agree with it. I am an Industrial Engineer – I believe in setting objectives, determining the best way to achieve them, and execute accordingly. I value rational thinking and structure. I gathered tons of information and was in a far better position to judge the viability of the project, but still, a lot of pieces of the puzzle didn't click. For example, there was a problem with finding the right domain experts that can build this type of complex software. And the funding was not guaranteed, so I had to drop it. I naturally tend to make decisions based on concrete data. Be it statistics, marketing, primary or secondary research. I like to have lots of data to use in making a decision.`,
+  "Personal reflection": `I am an Industrial Engineer – I believe in setting objectives, determining the best way to achieve them, and execute accordingly. I value rational thinking and structure. I gathered tons of information and was in a far better position to judge the viability of the project, but still, a lot of pieces of the puzzle didn't click. For example, there was a problem with finding the right domain experts that can build this type of complex software. And the funding was not guaranteed, so I had to drop it. I naturally tend to make decisions based on concrete data. Be it statistics, marketing, primary or secondary research. I like to have lots of data to use in making a decision.`,
   "Visionary founder pitch": `We're not building another analytics tool. We're reimagining what it means for a business to understand itself. What if your company could feel its own pulse — not through dashboards and KPIs, but through a living, breathing sense of where momentum is building and where energy is fading? We don't know exactly what form this will take yet, and that's the exciting part. We've been experimenting with some wild ideas — ambient data experiences, spatial computing interfaces — and every prototype surprises us. The market doesn't know it needs this yet, but when they see it, everything will shift.`,
   "Operations report": `Q3 operational efficiency improved by 3.2% against our target of 3.0%, driven primarily by the supply chain optimization initiative launched in Q1. Process standardisation across the three manufacturing sites has reduced variance in output quality from 4.1% to 2.8%. We recommend continuing the phased rollout of the new ERP modules, with Stage 3 implementation scheduled for Q4 pending successful completion of user acceptance testing. Risk assessment indicates two areas requiring attention: vendor concentration in the Southeast Asian supply corridor and pending regulatory changes in packaging standards. Mitigation plans are detailed in Appendix C.`,
   "Design thinking workshop": `Today we threw out the brief entirely. Instead of solving the problem as stated, we asked: whose problem is this really? We spent the morning in the field, just watching and listening, letting patterns emerge rather than hunting for them. One conversation with a nightshift nurse completely upended our assumptions — what we thought was a logistics problem turned out to be a trust problem. We prototyped three completely different directions in the afternoon, deliberately making them rough and provocative. The one that got the strongest reaction — both positive and negative — is the one we're pursuing tomorrow. We have no idea if it'll work, but it feels alive.`
 };
 
 const styleColors = {
-  Focused: { accent: "#63b3ed" },
-  Incremental: { accent: "#68d391" },
-  Playful: { accent: "#f6ad55" },
-  Breakaway: { accent: "#fc8181" },
+  Focused: { accent: "#ff6f20" },
+  Incremental: { accent: "#9f60b5" },
+  Playful: { accent: "#bed600" },
+  Breakaway: { accent: "#009ddb" },
 };
 
 function KTSMatrix({ uncertaintyScore, possibilityScore, style }) {
   const canvasRef = useRef(null);
+  const imgRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    const dpr = window.devicePixelRatio || 1;
-    const displayW = 400;
-    const displayH = 400;
-    canvas.width = displayW * dpr;
-    canvas.height = displayH * dpr;
-    canvas.style.width = "100%";
-    canvas.style.maxWidth = displayW + "px";
-    canvas.style.height = "auto";
-    ctx.scale(dpr, dpr);
 
-    const w = displayW, h = displayH;
-    const cx = w / 2, cy = h / 2, pad = 48;
+    const draw = () => {
+      const ctx = canvas.getContext("2d");
+      const dpr = window.devicePixelRatio || 1;
+      const displayW = 400;
+      const displayH = 400;
+      canvas.width = displayW * dpr;
+      canvas.height = displayH * dpr;
+      canvas.style.width = "100%";
+      canvas.style.maxWidth = displayW + "px";
+      canvas.style.height = "auto";
+      ctx.scale(dpr, dpr);
 
-    ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = "#0f1729";
-    ctx.fillRect(0, 0, w, h);
+      const w = displayW, h = displayH;
 
-    ctx.strokeStyle = "rgba(100,140,200,0.08)";
-    ctx.lineWidth = 1;
-    for (let i = 1; i < 10; i++) {
-      const x = pad + ((w - 2 * pad) / 10) * i;
-      ctx.beginPath(); ctx.moveTo(x, pad); ctx.lineTo(x, h - pad); ctx.stroke();
-      const y = pad + ((h - 2 * pad) / 10) * i;
-      ctx.beginPath(); ctx.moveTo(pad, y); ctx.lineTo(w - pad, y); ctx.stroke();
-    }
+      ctx.clearRect(0, 0, w, h);
 
-    const qa = 0.06;
-    ctx.fillStyle = `rgba(99,179,237,${qa})`; ctx.fillRect(pad, cy, cx - pad, h - pad - cy);
-    ctx.fillStyle = `rgba(246,173,85,${qa})`; ctx.fillRect(cx, cy, w - pad - cx, h - pad - cy);
-    ctx.fillStyle = `rgba(104,211,145,${qa})`; ctx.fillRect(pad, pad, cx - pad, cy - pad);
-    ctx.fillStyle = `rgba(252,129,129,${qa})`; ctx.fillRect(cx, pad, w - pad - cx, cy - pad);
+      // Draw background image if loaded
+      if (imgRef.current) {
+        ctx.drawImage(imgRef.current, 0, 0, w, h);
+      }
 
-    ctx.strokeStyle = "rgba(160,180,220,0.3)";
-    ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(pad, cy); ctx.lineTo(w - pad, cy); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx, pad); ctx.lineTo(cx, h - pad); ctx.stroke();
+      if (uncertaintyScore !== null && possibilityScore !== null) {
+        // Map scores to canvas coordinates
+        // The image plot area is inset: labels sit outside the colored borders
+        // Matching the 10/12 ratio from the results-view Chart.tsx
+        const cx = w / 2, cy = h / 2;
+        const plotRange = (w / 2) * (10 / 12); // usable plot radius
+        const plotX = cx + (uncertaintyScore / 10) * plotRange;
+        const plotY = cy - (possibilityScore / 10) * plotRange;
+        const color = styleColors[style] || styleColors.Focused;
 
-    ctx.font = "600 11px Georgia, serif";
-    ctx.textAlign = "center";
-    ctx.fillStyle = "rgba(160,180,220,0.7)";
-    ctx.fillText("REASON", pad + 36, cy + 16);
-    ctx.fillText("PLAY", w - pad - 24, cy + 16);
-    ctx.fillText("OPENNESS", cx, pad - 10);
-    ctx.fillText("STRUCTURE", cx, h - pad + 18);
+        // Glow
+        const gradient = ctx.createRadialGradient(plotX, plotY, 0, plotX, plotY, 30);
+        gradient.addColorStop(0, color.accent + "80");
+        gradient.addColorStop(1, color.accent + "00");
+        ctx.fillStyle = gradient;
+        ctx.beginPath(); ctx.arc(plotX, plotY, 30, 0, Math.PI * 2); ctx.fill();
 
-    ctx.font = "italic 11px Georgia, serif";
-    ctx.fillStyle = "rgba(99,179,237,0.5)"; ctx.fillText("Focused", pad + 50, h - pad - 12);
-    ctx.fillStyle = "rgba(246,173,85,0.5)"; ctx.fillText("Playful", w - pad - 44, h - pad - 12);
-    ctx.fillStyle = "rgba(104,211,145,0.5)"; ctx.fillText("Incremental", pad + 58, pad + 18);
-    ctx.fillStyle = "rgba(252,129,129,0.5)"; ctx.fillText("Breakaway", w - pad - 52, pad + 18);
+        // Point
+        ctx.fillStyle = color.accent;
+        ctx.beginPath(); ctx.arc(plotX, plotY, 7, 0, Math.PI * 2); ctx.fill();
 
-    if (uncertaintyScore !== null && possibilityScore !== null) {
-      const plotX = cx + (uncertaintyScore / 10) * (cx - pad);
-      const plotY = cy - (possibilityScore / 10) * (cy - pad);
-      const color = styleColors[style] || styleColors.Focused;
+        // Ring
+        ctx.strokeStyle = color.accent + "80"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(plotX, plotY, 12, 0, Math.PI * 2); ctx.stroke();
+      }
+    };
 
-      const gradient = ctx.createRadialGradient(plotX, plotY, 0, plotX, plotY, 30);
-      gradient.addColorStop(0, color.accent + "60");
-      gradient.addColorStop(1, color.accent + "00");
-      ctx.fillStyle = gradient;
-      ctx.beginPath(); ctx.arc(plotX, plotY, 30, 0, Math.PI * 2); ctx.fill();
-
-      ctx.fillStyle = color.accent;
-      ctx.beginPath(); ctx.arc(plotX, plotY, 6, 0, Math.PI * 2); ctx.fill();
-
-      ctx.strokeStyle = color.accent + "80"; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.arc(plotX, plotY, 10, 0, Math.PI * 2); ctx.stroke();
-
-      ctx.strokeStyle = color.accent + "30"; ctx.lineWidth = 1; ctx.setLineDash([4, 4]);
-      ctx.beginPath(); ctx.moveTo(plotX, pad); ctx.lineTo(plotX, h - pad); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(pad, plotY); ctx.lineTo(w - pad, plotY); ctx.stroke();
-      ctx.setLineDash([]);
+    // Load image then draw
+    if (!imgRef.current) {
+      const img = new Image();
+      img.onload = () => { imgRef.current = img; draw(); };
+      img.src = "/images/plot-background.png";
+    } else {
+      draw();
     }
   }, [uncertaintyScore, possibilityScore, style]);
 
-  return <canvas ref={canvasRef} style={{ borderRadius: 8, border: "1px solid rgba(100,140,200,0.15)" }} />;
+  return <canvas ref={canvasRef} style={{ borderRadius: 8 }} />;
 }
 
 function DimensionBar({ label, leftLabel, rightLabel, score, color }) {
@@ -479,14 +463,14 @@ export default function Home() {
               <div>
                 <DimensionBar
                   label="Attitude towards uncertainty" leftLabel="Reason"
-                  rightLabel="Play" score={result.uncertainty_score} color="#63b3ed"
+                  rightLabel="Play" score={result.uncertainty_score} color="#c4798a"
                 />
                 <div style={{ fontSize: 13, color: "#8899bb", lineHeight: 1.6, marginBottom: 20 }}>
                   {result.uncertainty_reasoning}
                 </div>
                 <DimensionBar
                   label="Attitude towards possibility" leftLabel="Structure"
-                  rightLabel="Openness" score={result.possibility_score} color="#68d391"
+                  rightLabel="Openness" score={result.possibility_score} color="#7ab5a0"
                 />
                 <div style={{ fontSize: 13, color: "#8899bb", lineHeight: 1.6, marginBottom: 20 }}>
                   {result.possibility_reasoning}
